@@ -1,0 +1,22 @@
+   CHIP Andall {
+    IN a[15];
+    OUT out;
+
+    PARTS:
+    // Put your code here:
+    And(a=a[0],b=true,out=o1);
+    And(a=o1,b=a[1],out=o2);
+    And(a=o2,b=a[2],out=o3);
+    And(a=o3,b=a[3],out=o4);
+    And(a=o4,b=a[4],out=o5);
+    And(a=o5,b=a[5],out=o6);
+    And(a=o6,b=a[6],out=o7);
+    And(a=o7,b=a[7],out=o8);
+    And(a=o8,b=a[8],out=o9);
+    And(a=o9,b=a[9],out=o10);
+    And(a=o10,b=a[10],out=o11);
+    And(a=o11,b=a[11],out=o12);
+    And(a=o12,b=a[12],out=o13);
+    And(a=o13,b=a[13],out=o14);
+    And(a=o14,b=a[14],out=out);
+}

@@ -1,0 +1,61 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/RAM8.hdl
+
+/**
+ * Memory of 8 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM8 {
+    IN in[16], load, address[3];
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+    //selection bit
+    Not(in=address[0],out=n0);
+    Not(in=address[1],out=n1);
+    Not(in=address[2],out=n2);
+    And(a=n2,b=n1,out=p1);
+    And(a=n0,b=p1,out=f1);
+    And(a=address[0],b=p1,out=f2);
+    And(a=n2,b=address[1],out=p2);
+    And(a=n0,b=p2,out=f3);
+    And(a=address[0],b=p2,out=f4);
+    And(a=address[2],b=n1,out=p3);
+    And(a=n0,b=p3,out=f5);
+    And(a=address[0],b=p3,out=f6);
+    And(a=address[2],b=address[1],out=p4);
+    And(a=n0,b=p4,out=f7);
+    And(a=address[0],b=p4,out=f8);
+    //load bit setting
+    And(a=f1,b=load,out=rf1);
+    Register(in=in, load=rf1, out=r1);
+    And(a=f2,b=load,out=rf2);
+    Register(in=in, load=rf2, out=r2);
+    And(a=f3,b=load,out=rf3);
+    Register(in=in, load=rf3, out=r3);
+    And(a=f4,b=load,out=rf4);
+    Register(in=in, load=rf4, out=r4);
+    And(a=f5,b=load,out=rf5);
+    Register(in=in, load=rf5, out=r5);
+    And(a=f6,b=load,out=rf6);
+    Register(in=in, load=rf6, out=r6);
+    And(a=f7,b=load,out=rf7);
+    Register(in=in, load=rf7, out=r7);
+    And(a=f8,b=load,out=rf8);
+    Register(in=in, load=rf8, out=r8);
+    //Mutiplex the output
+    Mux16(a=in,b=r1,sel=f1,out=o1);
+    Mux16(a=o1,sel=f2,b=r2,out=o2);
+    Mux16(a=o2,sel=f3,b=r3,out=o3);
+    Mux16(a=o3,sel=f4,b=r4,out=o4);
+    Mux16(a=o4,sel=f5,b=r5,out=o5);
+    Mux16(a=o5,sel=f6,b=r6,out=o6);
+    Mux16(a=o6,sel=f7,b=r7,out=o7);
+    Mux16(a=o7,sel=f8,b=r8,out=out);
+}

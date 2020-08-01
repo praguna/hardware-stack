@@ -1,0 +1,23 @@
+CHIP MatchLast {
+    IN a[15];
+    OUT out[15];
+
+    PARTS:
+    // Put your code here:
+    Not(in=true,out=b);
+    Not(in=a[0],out=out[0]);
+    Not(in=a[1],out=out[1]);
+    Not(in=a[2],out=out[2]);
+    Not(in=a[3],out=out[3]);
+    Not(in=a[4],out=out[4]);
+    Not(in=a[5],out=out[5]);
+    Not(in=a[6],out=out[6]);
+    Not(in=a[7],out=out[7]);
+    Not(in=a[8],out=out[8]);
+    Not(in=a[9],out=out[9]);
+    Not(in=a[10],out=out[10]);
+    Not(in=a[11],out=out[11]);
+    Not(in=a[12],out=out[12]);
+    And(a=a[13],b=true,out=out[13]);
+    And(a=a[14],b=true,out=out[14]);
+}

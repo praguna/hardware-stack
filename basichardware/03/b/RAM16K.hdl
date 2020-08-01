@@ -1,0 +1,39 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/b/RAM16K.hdl
+
+/**
+ * Memory of 16K registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM16K {
+    IN in[16], load, address[14];
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+    Not(in=address[12],out=n0);
+    Not(in=address[13],out=n1);
+    And(a=n0,b=n1,out=f1);
+    And(a=n1,b=address[12],out=f2);
+    And(a=address[13],b=n0,out=f3);
+    And(a=address[13],b=address[12],out=f4);
+    //load bit setting
+    And(a=f1,b=load,out=rf1);
+    RAM4K(in=in, load=rf1, address=address[0..11], out=r1);
+    And(a=f2,b=load,out=rf2);
+    RAM4K(in=in, load=rf2, address=address[0..11], out=r2);
+    And(a=f3,b=load, out=rf3);
+    RAM4K(in=in, load=rf3, address=address[0..11], out=r3);
+    And(a=f4,b=load, out=rf4);
+    RAM4K(in=in, load=rf4, address=address[0..11], out=r4);
+    //Mutiplex the output
+    Mux16(a=in,b=r1,sel=f1,out=o1);
+    Mux16(a=o1,sel=f2,b=r2,out=o2);
+    Mux16(a=o2,sel=f3,b=r3,out=o3);
+    Mux16(a=o3,sel=f4,b=r4,out=out);
+}

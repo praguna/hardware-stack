@@ -1,0 +1,125 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Put your code here:
+    // decoding the instruction set
+    //Binary: 1 1 1 a c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3 (type C)
+    And(a=instruction[12],b=true,out=a);
+    And(a=instruction[11],b=true,out=c1);
+    And(a=instruction[10],b=true,out=c2);
+    And(a=instruction[9],b=true,out=c3);
+    And(a=instruction[8],b=true,out=c4);
+    And(a=instruction[7],b=true,out=c5);
+    And(a=instruction[6],b=true,out=c6);
+    And(a=instruction[5],b=true,out=d1);
+    And(a=instruction[4],b=true,out=d2);
+    And(a=instruction[3],b=true,out=d3);
+    And(a=instruction[2],b=true,out=j1);
+    And(a=instruction[1],b=true,out=j2);
+    And(a=instruction[0],b=true,out=j3);
+
+    // Mux Filter for instruction
+    Mux16(a=instruction,b=mout,sel=instruction[15],out=addrin);
+    
+    // A register
+    Mux(a=true,b=d1,sel=instruction[15],out=aload);
+    ARegister(in=addrin,load=aload,out=addr);
+
+    //A and inM Filter
+    Mux(a=false,b=a,sel=instruction[15],out=fsel);
+    Mux16(a=addr,b=inM,sel=fsel,out=y);
+
+    // D Register
+    Mux(a=false,b=d2,sel=instruction[15],out=dload);
+    DRegister(in=mout,load=dload,out=x);
+
+    //ALU chip
+    ALU(x=x,y=y,zx=c1,nx=c2,zy=c3,ny=c4,f=c5,no=c6,out=mout,zr=zr,ng=ng);
+
+    //setting j1 j2 j3
+    // all combinations
+    Not(in=j1,out=nj1);
+    Not(in=j2,out=nj2);
+    Not(in=j3,out=nj3);
+    And(a=nj1,b=nj2,out=pj1);
+    And(a=pj1,b=j3,out=oj1);
+    And(a=nj1,b=j2,out=pj2);
+    And(a=pj2,b=nj3,out=oj2);
+    And(a=pj2,b=j3,out=oj3);
+    And(a=j1,b=nj2,out=pj3);
+    And(a=pj3,b=nj3,out=oj4);
+    And(a=pj3,b=j3,out=oj5);
+    And(a=j1,b=j2,out=pj4);
+    And(a=pj4,b=nj3,out=oj6);
+    And(a=pj4,b=j3,out=oj7);
+    // all possible outputs >0 , <0 , ~0, ==0
+    Not(in=zr,out=nzr);
+    Not(in=ng,out=nng);
+    Or(a=ng,b=zr,out=ltezr);
+    Or(a=nng,b=zr,out=gtezr);
+    And(a=nng,b=nzr,out=gtzr);
+    And(a=ng,b=nzr,out=ltzr);
+    //all possible outputs
+    And(a=oj1,b=gtzr,out=ojp1);
+    And(a=oj2,b=zr,out=ojp2);
+    And(a=oj3,b=gtezr,out=ojp3);
+    And(a=oj4,b=ltzr,out=ojp4);
+    And(a=oj5,b=nzr,out=ojp5);
+    And(a=oj6,b=ltezr,out=ojp6);
+    And(a=oj7,b=true,out=ojp7);
+    //Evalute or of all outputs
+    Or(a=ojp1,b=ojp2,out=jmp1);
+    Or(a=jmp1,b=ojp3,out=jmp2);
+    Or(a=jmp2,b=ojp4,out=jmp3);
+    Or(a=jmp3,b=ojp5,out=jmp4);
+    Or(a=jmp4,b=ojp6,out=jmp5);
+    Or(a=jmp5,b=ojp7,out=jp);
+    
+    // Program counter
+    Mux(a=false,b=jp,sel=instruction[15],out=pcload);
+    PC(in=addr,load=pcload,reset=reset,inc=true,out=pcout);
+
+    //Define outputs 
+    Mux(a=false,b=d3,sel=instruction[15],out=writeM);
+    And15(a=addr,b=true,out=addressM);
+    And16(a=mout,b=true,out=outM);
+    And15(a=pcout,b=true,out=pc);
+}
